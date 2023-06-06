@@ -39,4 +39,4 @@ outputs:
 
 runs:
   using: "node16"
-  main: "dist/main.js"
+  main: "dist/main.ts"
