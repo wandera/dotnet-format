@@ -10693,16 +10693,46 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fix = exports.check = void 0;
 const core_1 = __nccwpck_require__(3722);
 const dotnet_1 = __nccwpck_require__(5625);
-const version_1 = __nccwpck_require__(6122);
-async function check() {
-    const onlyChangedFiles = (0, core_1.getBooleanInput)("only-changed-files");
-    const failFast = (0, core_1.getBooleanInput)("fail-fast");
-    const version = (0, core_1.getInput)("version", { required: true });
-    const dotnetFormatVersion = (0, version_1.checkVersion)(version);
-    const result = await (0, dotnet_1.format)(dotnetFormatVersion)({
-        dryRun: true,
+function buildOptions() {
+    const onlyChangedFiles = (0, core_1.getInput)("only-changed-files") === "true";
+    const include = (0, core_1.getInput)("include");
+    const workspace = (0, core_1.getInput)("workspace");
+    const workspaceIsFolder = (0, core_1.getInput)("workspaceIsFolder") === "false";
+    const exclude = (0, core_1.getInput)("exclude");
+    const logLevel = (0, core_1.getInput)("log-level");
+    const fixWhitespace = (0, core_1.getInput)("fix-whitespace") === "true";
+    const fixAnalyzersLevel = (0, core_1.getInput)("fix-analyzers-level");
+    const fixStyleLevel = (0, core_1.getInput)("fix-style-level");
+    const formatOptions = {
         onlyChangedFiles,
-    });
+        workspaceIsFolder,
+        fixWhitespace,
+    };
+    if (include !== undefined && include != "") {
+        formatOptions.include = include;
+    }
+    if (workspace !== undefined && workspace != "") {
+        formatOptions.workspace = workspace;
+    }
+    if (exclude !== undefined && exclude != "") {
+        formatOptions.exclude = exclude;
+    }
+    if (logLevel !== undefined && logLevel != "") {
+        formatOptions.logLevel = logLevel;
+    }
+    if (fixAnalyzersLevel !== undefined && fixAnalyzersLevel != "") {
+        formatOptions.fixAnalyzersLevel = fixAnalyzersLevel;
+    }
+    if (fixStyleLevel !== undefined && fixStyleLevel != "") {
+        formatOptions.fixStyleLevel = fixStyleLevel;
+    }
+    return formatOptions;
+}
+async function check() {
+    const failFast = (0, core_1.getInput)("fail-fast") === "true";
+    const formatOptions = buildOptions();
+    formatOptions.dryRun = true;
+    const result = await (0, dotnet_1.format)(formatOptions);
     (0, core_1.setOutput)("has-changes", result.toString());
     // fail fast will cause the workflow to stop on this job
     if (result && failFast) {
@@ -10711,13 +10741,9 @@ async function check() {
 }
 exports.check = check;
 async function fix() {
-    const onlyChangedFiles = (0, core_1.getBooleanInput)("only-changed-files");
-    const version = (0, core_1.getInput)("version", { required: true });
-    const dotnetFormatVersion = (0, version_1.checkVersion)(version);
-    const result = await (0, dotnet_1.format)(dotnetFormatVersion)({
-        dryRun: false,
-        onlyChangedFiles,
-    });
+    const formatOptions = buildOptions();
+    formatOptions.dryRun = false;
+    const result = await (0, dotnet_1.format)(formatOptions);
     (0, core_1.setOutput)("has-changes", result.toString());
 }
 exports.fix = fix;
@@ -10750,8 +10776,37 @@ function formatOnlyChangedFiles(onlyChangedFiles) {
 async function formatVersion3(options) {
     const execOptions = { ignoreReturnCode: true };
     const dotnetFormatOptions = ["format", "--check"];
+    //if (options.dryRun) {
+    //  dotnetFormatOptions.push("--dry-run");
+    //}
+    if (formatOnlyChangedFiles(options.onlyChangedFiles)) {
+        const filesToCheck = await (0, files_1.getPullRequestFiles)();
+        (0, core_1.info)(`Checking ${filesToCheck.length} files`);
+        // if there weren't any files to check then we need to bail
+        if (!filesToCheck.length) {
+            (0, core_1.debug)("No files found for formatting");
+            return false;
+        }
+        dotnetFormatOptions.push("--include", filesToCheck.join(","));
+    }
+    const dotnetPath = await (0, io_1.which)("dotnet", true);
+    const dotnetResult = await (0, exec_1.exec)(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
+    return !!dotnetResult;
+}
+async function format(options) {
+    const execOptions = {
+        ignoreReturnCode: true,
+        windowsVerbatimArguments: true,
+    };
+    const dotnetFormatOptions = ["format"];
+    if (options.workspace !== undefined && options.workspace != "") {
+        if (options.workspaceIsFolder) {
+            dotnetFormatOptions.push("-f");
+        }
+        dotnetFormatOptions.push(options.workspace);
+    }
     if (options.dryRun) {
-        dotnetFormatOptions.push("--dry-run");
+        dotnetFormatOptions.push("--check");
     }
     if (formatOnlyChangedFiles(options.onlyChangedFiles)) {
         const filesToCheck = await (0, files_1.getPullRequestFiles)();
@@ -10761,18 +10816,58 @@ async function formatVersion3(options) {
             (0, core_1.debug)("No files found for formatting");
             return false;
         }
-        dotnetFormatOptions.push("--files", filesToCheck.join(","));
+        //dotnetFormatOptions.push("-f");
+        dotnetFormatOptions.push("--include", filesToCheck.join(" "));
+    }
+    if (options.exclude !== undefined && options.exclude != "") {
+        dotnetFormatOptions.push("--exclude", options.exclude);
+    }
+    if (options.fixWhitespace) {
+        dotnetFormatOptions.push("--fix-whitespace");
+    }
+    if (options.fixAnalyzersLevel !== undefined && options.fixAnalyzersLevel != "") {
+        dotnetFormatOptions.push("--fix-analyzers", options.fixAnalyzersLevel);
+    }
+    if (options.fixStyleLevel !== undefined && options.fixStyleLevel != "") {
+        dotnetFormatOptions.push("--fix-style", options.fixStyleLevel);
+    }
+    if (options.logLevel !== undefined && options.logLevel != "") {
+        dotnetFormatOptions.push("--verbosity", options.logLevel);
     }
     const dotnetPath = await (0, io_1.which)("dotnet", true);
     const dotnetResult = await (0, exec_1.exec)(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
-    return !!dotnetResult;
-}
-function format(version) {
-    switch (version || "") {
-        case "3":
-            return formatVersion3;
-        default:
-            throw Error(`dotnet-format version "${version}" is unsupported`);
+    // When NOT doing only a dry-run we inspect the actual changed files
+    if (!options.dryRun) {
+        (0, core_1.info)("Checking changed files");
+        // Check if there are any changed files
+        const stdout = [];
+        const stderr = [];
+        const gitExecOptions = {
+            ignoreReturnCode: true,
+            listeners: {
+                stdout: (data) => {
+                    stdout.push(data.toString());
+                },
+                stderr: (data) => {
+                    stderr.push(data.toString());
+                },
+            },
+        };
+        await (0, exec_1.exec)("git", ["status", "-s"], gitExecOptions);
+        if (stderr.join("") != "") {
+            (0, core_1.error)("Errors while checking git status for changed files. Error: " + stderr);
+        }
+        if (stdout.join("") == "") {
+            (0, core_1.info)("Did not find any changed files");
+            return false;
+        }
+        (0, core_1.info)("Found changed files");
+        return true;
+    }
+    // else, we can just return rely on the exit code of the dotnet format process
+    else {
+        (0, core_1.info)("dotnet format return code ${dotnetResult}");
+        return !!dotnetResult;
     }
 }
 exports.format = format;
@@ -10810,30 +10905,6 @@ async function getPullRequestFiles() {
         .map((file) => file.filename);
 }
 exports.getPullRequestFiles = getPullRequestFiles;
-
-
-/***/ }),
-
-/***/ 6122:
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.checkVersion = void 0;
-const supportedVersions = [
-    "3",
-];
-function checkVersion(version) {
-    for (let i = 0; i < supportedVersions.length; i++) {
-        const ver = supportedVersions[i];
-        if (ver === version) {
-            return version;
-        }
-    }
-    throw Error(`dotnet-format version "${version}" is unsupported`);
-}
-exports.checkVersion = checkVersion;
 
 
 /***/ }),
