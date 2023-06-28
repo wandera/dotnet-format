@@ -50,7 +50,7 @@ export async function format(options: FormatOptions): Promise<boolean> {
 
   const dotnetFormatOptions = ["format"];
 
-  if (options.workspace !== undefined && options.workspace != "") {
+  if (options.workspace !== undefined && options.workspace !== "") {
     if (options.workspaceIsFolder) {
       dotnetFormatOptions.push("-f");
     }
@@ -76,7 +76,7 @@ export async function format(options: FormatOptions): Promise<boolean> {
     dotnetFormatOptions.push("--include", filesToCheck.join(" "));
   }
 
-  if (options.exclude !== undefined && options.exclude != "") {
+  if (options.exclude !== undefined && options.exclude !== "") {
     dotnetFormatOptions.push("--exclude", options.exclude);
   }
 
@@ -84,15 +84,15 @@ export async function format(options: FormatOptions): Promise<boolean> {
     dotnetFormatOptions.push("--fix-whitespace");
   }
 
-  if (options.fixAnalyzersLevel !== undefined && options.fixAnalyzersLevel != "") {
+  if (options.fixAnalyzersLevel !== undefined && options.fixAnalyzersLevel !== "") {
     dotnetFormatOptions.push("--fix-analyzers", options.fixAnalyzersLevel);
   }
 
-  if (options.fixStyleLevel !== undefined && options.fixStyleLevel != "") {
+  if (options.fixStyleLevel !== undefined && options.fixStyleLevel !== "") {
     dotnetFormatOptions.push("--fix-style", options.fixStyleLevel);
   }
 
-  if (options.logLevel !== undefined && options.logLevel != "") {
+  if (options.logLevel !== undefined && options.logLevel !== "") {
     dotnetFormatOptions.push("--verbosity", options.logLevel);
   }
 
@@ -125,11 +125,11 @@ export async function format(options: FormatOptions): Promise<boolean> {
 
     await exec("git", ["status", "-s"], gitExecOptions);
 
-    if (stderr.join("") != "") {
-      error("Errors while checking git status for changed files. Error: " + stderr);
+    if (stderr.join("") !== "") {
+      error("Errors while checking git status for changed files. Error: " + stderr.toString());
     }
 
-    if (stdout.join("") == "") {
+    if (stdout.join("") === "") {
       info("Did not find any changed files");
 
       return false;

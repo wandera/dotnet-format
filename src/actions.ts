@@ -1,11 +1,9 @@
 import {
-  getBooleanInput,
   getInput,
   setOutput,
 } from "@actions/core";
 
 import { format, FormatOptions } from "./dotnet";
-import { checkVersion } from "./version";
 
 function buildOptions(): FormatOptions {
   const onlyChangedFiles = getInput("only-changed-files") === "true";
@@ -23,29 +21,30 @@ function buildOptions(): FormatOptions {
     onlyChangedFiles,
     workspaceIsFolder,
     fixWhitespace,
+    verifyNoChanges,
   };
 
-  if (include !== undefined && include != "") {
+  if (include !== undefined && include !== "") {
     formatOptions.include = include;
   }
 
-  if (workspace !== undefined && workspace != "") {
+  if (workspace !== undefined && workspace !== "") {
     formatOptions.workspace = workspace;
   }
 
-  if (exclude !== undefined && exclude != "") {
+  if (exclude !== undefined && exclude !== "") {
     formatOptions.exclude = exclude;
   }
 
-  if (logLevel !== undefined && logLevel != "") {
+  if (logLevel !== undefined && logLevel !== "") {
     formatOptions.logLevel = logLevel;
   }
 
-  if (fixAnalyzersLevel !== undefined && fixAnalyzersLevel != "") {
+  if (fixAnalyzersLevel !== undefined && fixAnalyzersLevel !== "") {
     formatOptions.fixAnalyzersLevel = fixAnalyzersLevel;
   }
 
-  if (fixStyleLevel !== undefined && fixStyleLevel != "") {
+  if (fixStyleLevel !== undefined && fixStyleLevel !== "") {
     formatOptions.fixStyleLevel = fixStyleLevel;
   }
 

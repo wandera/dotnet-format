@@ -10708,23 +10708,24 @@ function buildOptions() {
         onlyChangedFiles,
         workspaceIsFolder,
         fixWhitespace,
+        verifyNoChanges,
     };
-    if (include !== undefined && include != "") {
+    if (include !== undefined && include !== "") {
         formatOptions.include = include;
     }
-    if (workspace !== undefined && workspace != "") {
+    if (workspace !== undefined && workspace !== "") {
         formatOptions.workspace = workspace;
     }
-    if (exclude !== undefined && exclude != "") {
+    if (exclude !== undefined && exclude !== "") {
         formatOptions.exclude = exclude;
     }
-    if (logLevel !== undefined && logLevel != "") {
+    if (logLevel !== undefined && logLevel !== "") {
         formatOptions.logLevel = logLevel;
     }
-    if (fixAnalyzersLevel !== undefined && fixAnalyzersLevel != "") {
+    if (fixAnalyzersLevel !== undefined && fixAnalyzersLevel !== "") {
         formatOptions.fixAnalyzersLevel = fixAnalyzersLevel;
     }
-    if (fixStyleLevel !== undefined && fixStyleLevel != "") {
+    if (fixStyleLevel !== undefined && fixStyleLevel !== "") {
         formatOptions.fixStyleLevel = fixStyleLevel;
     }
     return formatOptions;
@@ -10780,7 +10781,7 @@ async function format(options) {
         windowsVerbatimArguments: true,
     };
     const dotnetFormatOptions = ["format"];
-    if (options.workspace !== undefined && options.workspace != "") {
+    if (options.workspace !== undefined && options.workspace !== "") {
         if (options.workspaceIsFolder) {
             dotnetFormatOptions.push("-f");
         }
@@ -10799,19 +10800,19 @@ async function format(options) {
         }
         dotnetFormatOptions.push("--include", filesToCheck.join(" "));
     }
-    if (options.exclude !== undefined && options.exclude != "") {
+    if (options.exclude !== undefined && options.exclude !== "") {
         dotnetFormatOptions.push("--exclude", options.exclude);
     }
     if (options.fixWhitespace) {
         dotnetFormatOptions.push("--fix-whitespace");
     }
-    if (options.fixAnalyzersLevel !== undefined && options.fixAnalyzersLevel != "") {
+    if (options.fixAnalyzersLevel !== undefined && options.fixAnalyzersLevel !== "") {
         dotnetFormatOptions.push("--fix-analyzers", options.fixAnalyzersLevel);
     }
-    if (options.fixStyleLevel !== undefined && options.fixStyleLevel != "") {
+    if (options.fixStyleLevel !== undefined && options.fixStyleLevel !== "") {
         dotnetFormatOptions.push("--fix-style", options.fixStyleLevel);
     }
-    if (options.logLevel !== undefined && options.logLevel != "") {
+    if (options.logLevel !== undefined && options.logLevel !== "") {
         dotnetFormatOptions.push("--verbosity", options.logLevel);
     }
     if (options.verifyNoChanges) {
@@ -10837,10 +10838,10 @@ async function format(options) {
             },
         };
         await (0, exec_1.exec)("git", ["status", "-s"], gitExecOptions);
-        if (stderr.join("") != "") {
-            (0, core_1.error)("Errors while checking git status for changed files. Error: " + stderr);
+        if (stderr.join("") !== "") {
+            (0, core_1.error)("Errors while checking git status for changed files. Error: " + stderr.toString());
         }
-        if (stdout.join("") == "") {
+        if (stdout.join("") === "") {
             (0, core_1.info)("Did not find any changed files");
             return false;
         }
