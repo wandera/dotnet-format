@@ -10703,12 +10703,10 @@ function buildOptions() {
     const fixWhitespace = (0, core_1.getInput)("fix-whitespace") === "false";
     const fixAnalyzersLevel = (0, core_1.getInput)("fix-analyzers-level");
     const fixStyleLevel = (0, core_1.getInput)("fix-style-level");
-    const verifyNoChanges = (0, core_1.getInput)("verify-no-changes") === "false";
     const formatOptions = {
         onlyChangedFiles,
         workspaceIsFolder,
         fixWhitespace,
-        verifyNoChanges,
     };
     if (include !== undefined && include !== "") {
         formatOptions.include = include;
@@ -10815,9 +10813,7 @@ async function format(options) {
     if (options.logLevel !== undefined && options.logLevel !== "") {
         dotnetFormatOptions.push("--verbosity", options.logLevel);
     }
-    if (options.verifyNoChanges) {
-        dotnetFormatOptions.push("--verify-no-changes");
-    }
+    dotnetFormatOptions.push("--verify-no-changes");
     const dotnetPath = await (0, io_1.which)("dotnet", true);
     const dotnetResult = await (0, exec_1.exec)(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
     // When NOT doing only a dry-run we inspect the actual changed files
