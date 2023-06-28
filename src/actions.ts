@@ -14,7 +14,7 @@ function buildOptions(): FormatOptions {
   const workspaceIsFolder = getInput("workspaceIsFolder") === "false";
   const exclude: string = getInput("exclude");
   const logLevel: string = getInput("log-level");
-  const fixWhitespace = getInput("fix-whitespace") === "true";
+  const fixWhitespace = getInput("fix-whitespace") === "false";
   const fixAnalyzersLevel: string = getInput("fix-analyzers-level");
   const fixStyleLevel: string = getInput("fix-style-level");
 
