@@ -3,7 +3,10 @@ import {
   setOutput,
 } from "@actions/core";
 
-import { format, FormatOptions } from "./dotnet";
+import {
+  format,
+  FormatOptions,
+} from "./dotnet";
 
 function buildOptions(): FormatOptions {
   const onlyChangedFiles = getInput("only-changed-files") === "true";
