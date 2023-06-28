@@ -16,6 +16,7 @@ export type FormatFunction = (options: FormatOptions) => Promise<boolean>;
 
 export interface FormatOptions {
   onlyChangedFiles: boolean;
+  verifyNoChanges?: boolean;
   workspaceIsFolder?: boolean;
   dryRun?: boolean;
   workspace?: string;
@@ -95,7 +96,9 @@ export async function format(options: FormatOptions): Promise<boolean> {
     dotnetFormatOptions.push("--verbosity", options.logLevel);
   }
 
-  dotnetFormatOptions.push("--verify-no-changes");
+  if (options.verifyNoChanges) {
+    dotnetFormatOptions.push("--verify-no-changes");
+  }
 
   const dotnetPath: string = await which("dotnet", true);
   const dotnetResult = await exec(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);

@@ -17,6 +17,7 @@ function buildOptions(): FormatOptions {
   const fixWhitespace = getInput("fix-whitespace") === "false";
   const fixAnalyzersLevel: string = getInput("fix-analyzers-level");
   const fixStyleLevel: string = getInput("fix-style-level");
+  const verifyNoChanges = getInput("verify-no-changes") === "false";
 
   const formatOptions: FormatOptions = {
     onlyChangedFiles,
