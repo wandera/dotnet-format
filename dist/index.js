@@ -10813,6 +10813,7 @@ async function format(options) {
     if (options.logLevel !== undefined && options.logLevel != "") {
         dotnetFormatOptions.push("--verbosity", options.logLevel);
     }
+    dotnetFormatOptions.push("--verify-no-changes");
     const dotnetPath = await (0, io_1.which)("dotnet", true);
     const dotnetResult = await (0, exec_1.exec)(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
     // When NOT doing only a dry-run we inspect the actual changed files
