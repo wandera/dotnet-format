@@ -96,9 +96,7 @@ export async function format(options: FormatOptions): Promise<boolean> {
     dotnetFormatOptions.push("--verbosity", options.logLevel);
   }
 
-  if (options.verifyNoChanges) {
-    dotnetFormatOptions.push("--verify-no-changes");
-  }
+  dotnetFormatOptions.push("--verify-no-changes");
 
   const dotnetPath: string = await which("dotnet", true);
   const dotnetResult = await exec(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
