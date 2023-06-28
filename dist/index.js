@@ -10773,26 +10773,6 @@ function formatOnlyChangedFiles(onlyChangedFiles) {
     }
     return false;
 }
-async function formatVersion3(options) {
-    const execOptions = { ignoreReturnCode: true };
-    const dotnetFormatOptions = ["format", "--check"];
-    //if (options.dryRun) {
-    //  dotnetFormatOptions.push("--dry-run");
-    //}
-    if (formatOnlyChangedFiles(options.onlyChangedFiles)) {
-        const filesToCheck = await (0, files_1.getPullRequestFiles)();
-        (0, core_1.info)(`Checking ${filesToCheck.length} files`);
-        // if there weren't any files to check then we need to bail
-        if (!filesToCheck.length) {
-            (0, core_1.debug)("No files found for formatting");
-            return false;
-        }
-        dotnetFormatOptions.push("--include", filesToCheck.join(","));
-    }
-    const dotnetPath = await (0, io_1.which)("dotnet", true);
-    const dotnetResult = await (0, exec_1.exec)(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
-    return !!dotnetResult;
-}
 async function format(options) {
     const execOptions = {
         ignoreReturnCode: true,
@@ -10816,7 +10796,6 @@ async function format(options) {
             (0, core_1.debug)("No files found for formatting");
             return false;
         }
-        //dotnetFormatOptions.push("-f");
         dotnetFormatOptions.push("--include", filesToCheck.join(" "));
     }
     if (options.exclude !== undefined && options.exclude != "") {

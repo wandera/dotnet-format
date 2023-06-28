@@ -12,8 +12,6 @@ import { getPullRequestFiles } from "./files";
 
 import type { ExecOptions } from "@actions/exec/lib/interfaces";
 
-import type { DotNetFormatVersion } from "./version";
-
 export type FormatFunction = (options: FormatOptions) => Promise<boolean>;
 
 export interface FormatOptions {
@@ -41,35 +39,6 @@ function formatOnlyChangedFiles(onlyChangedFiles: boolean): boolean {
   }
 
   return false;
-}
-
-async function formatVersion3(options: FormatOptions): Promise<boolean> {
-  const execOptions: ExecOptions = { ignoreReturnCode: true };
-
-  const dotnetFormatOptions = ["format", "--check"];
-
-  //if (options.dryRun) {
-  //  dotnetFormatOptions.push("--dry-run");
-  //}
-
-  if (formatOnlyChangedFiles(options.onlyChangedFiles)) {
-    const filesToCheck = await getPullRequestFiles();
-
-    info(`Checking ${filesToCheck.length} files`);
-
-    // if there weren't any files to check then we need to bail
-    if (!filesToCheck.length) {
-      debug("No files found for formatting");
-      return false;
-    }
-
-    dotnetFormatOptions.push("--include", filesToCheck.join(","));
-  }
-
-  const dotnetPath: string = await which("dotnet", true);
-  const dotnetResult = await exec(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
-
-  return !!dotnetResult;
 }
 
 export async function format(options: FormatOptions): Promise<boolean> {
@@ -102,7 +71,6 @@ export async function format(options: FormatOptions): Promise<boolean> {
       debug("No files found for formatting");
       return false;
     }
-    //dotnetFormatOptions.push("-f");
 
     dotnetFormatOptions.push("--include", filesToCheck.join(" "));
   }
