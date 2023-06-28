@@ -10703,7 +10703,7 @@ function buildOptions() {
     const fixWhitespace = (0, core_1.getInput)("fix-whitespace") === "false";
     const fixAnalyzersLevel = (0, core_1.getInput)("fix-analyzers-level");
     const fixStyleLevel = (0, core_1.getInput)("fix-style-level");
-    const verifyNoChanges = (0, core_1.getInput)("verify-no-changes") === "false";
+    const verifyNoChanges = (0, core_1.getInput)("verify-no-changes") === "true";
     const formatOptions = {
         onlyChangedFiles,
         workspaceIsFolder,
