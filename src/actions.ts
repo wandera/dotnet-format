@@ -1,23 +1,66 @@
 import {
-  getBooleanInput,
   getInput,
   setOutput,
 } from "@actions/core";
 
-import { format } from "./dotnet";
-import { checkVersion } from "./version";
+import {
+  format,
+  FormatOptions,
+} from "./dotnet";
+
+function buildOptions(): FormatOptions {
+  const onlyChangedFiles = getInput("only-changed-files") === "true";
+  const include: string = getInput("include");
+  const workspace: string = getInput("workspace");
+  const workspaceIsFolder = getInput("workspaceIsFolder") === "false";
+  const exclude: string = getInput("exclude");
+  const logLevel: string = getInput("log-level");
+  const fixWhitespace = getInput("fix-whitespace") === "false";
+  const fixAnalyzersLevel: string = getInput("fix-analyzers-level");
+  const fixStyleLevel: string = getInput("fix-style-level");
+  const verifyNoChanges = getInput("verify-no-changes") === "false";
+
+  const formatOptions: FormatOptions = {
+    onlyChangedFiles,
+    workspaceIsFolder,
+    fixWhitespace,
+    verifyNoChanges,
+  };
+
+  if (include !== undefined && include !== "") {
+    formatOptions.include = include;
+  }
+
+  if (workspace !== undefined && workspace !== "") {
+    formatOptions.workspace = workspace;
+  }
+
+  if (exclude !== undefined && exclude !== "") {
+    formatOptions.exclude = exclude;
+  }
+
+  if (logLevel !== undefined && logLevel !== "") {
+    formatOptions.logLevel = logLevel;
+  }
+
+  if (fixAnalyzersLevel !== undefined && fixAnalyzersLevel !== "") {
+    formatOptions.fixAnalyzersLevel = fixAnalyzersLevel;
+  }
+
+  if (fixStyleLevel !== undefined && fixStyleLevel !== "") {
+    formatOptions.fixStyleLevel = fixStyleLevel;
+  }
+
+  return formatOptions;
+}
 
 export async function check(): Promise<void> {
-  const onlyChangedFiles = getBooleanInput("only-changed-files");
-  const failFast = getBooleanInput("fail-fast");
-  const version = getInput("version", { required: true });
+  const failFast = getInput("fail-fast") === "true";
 
-  const dotnetFormatVersion = checkVersion(version);
+  const formatOptions = buildOptions();
+  formatOptions.dryRun = true;
 
-  const result = await format(dotnetFormatVersion)({
-    dryRun: true,
-    onlyChangedFiles,
-  });
+  const result = await format(formatOptions);
 
   setOutput("has-changes", result.toString());
 
@@ -28,15 +71,10 @@ export async function check(): Promise<void> {
 }
 
 export async function fix(): Promise<void> {
-  const onlyChangedFiles = getBooleanInput("only-changed-files");
-  const version = getInput("version", { required: true });
+  const formatOptions = buildOptions();
+  formatOptions.dryRun = false;
 
-  const dotnetFormatVersion = checkVersion(version);
-
-  const result = await format(dotnetFormatVersion)({
-    dryRun: false,
-    onlyChangedFiles,
-  });
+  const result = await format(formatOptions);
 
   setOutput("has-changes", result.toString());
 }

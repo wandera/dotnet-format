@@ -1,5 +1,6 @@
 import {
   debug,
+  error,
   info,
   warning,
 } from "@actions/core";
@@ -11,13 +12,20 @@ import { getPullRequestFiles } from "./files";
 
 import type { ExecOptions } from "@actions/exec/lib/interfaces";
 
-import type { DotNetFormatVersion } from "./version";
-
 export type FormatFunction = (options: FormatOptions) => Promise<boolean>;
 
 export interface FormatOptions {
-  dryRun: boolean;
   onlyChangedFiles: boolean;
+  verifyNoChanges?: boolean;
+  workspaceIsFolder?: boolean;
+  dryRun?: boolean;
+  workspace?: string;
+  include?: string;
+  exclude?: string;
+  logLevel?: string;
+  fixWhitespace: boolean;
+  fixAnalyzersLevel?: string;
+  fixStyleLevel?: string;
 }
 
 function formatOnlyChangedFiles(onlyChangedFiles: boolean): boolean {
@@ -34,13 +42,24 @@ function formatOnlyChangedFiles(onlyChangedFiles: boolean): boolean {
   return false;
 }
 
-async function formatVersion3(options: FormatOptions): Promise<boolean> {
-  const execOptions: ExecOptions = { ignoreReturnCode: true };
+export async function format(options: FormatOptions): Promise<boolean> {
+  const execOptions: ExecOptions = {
+    ignoreReturnCode: true,
+    windowsVerbatimArguments: true,
+  };
 
-  const dotnetFormatOptions = ["format", "--check"];
+  const dotnetFormatOptions = ["format"];
+
+  if (options.workspace !== undefined && options.workspace !== "") {
+    if (options.workspaceIsFolder) {
+      dotnetFormatOptions.push("-f");
+    }
+
+    dotnetFormatOptions.push(options.workspace);
+  }
 
   if (options.dryRun) {
-    dotnetFormatOptions.push("--dry-run");
+    dotnetFormatOptions.push("--check");
   }
 
   if (formatOnlyChangedFiles(options.onlyChangedFiles)) {
@@ -54,21 +73,74 @@ async function formatVersion3(options: FormatOptions): Promise<boolean> {
       return false;
     }
 
-    dotnetFormatOptions.push("--files", filesToCheck.join(","));
+    dotnetFormatOptions.push("--include", filesToCheck.join(" "));
+  }
+
+  if (options.exclude !== undefined && options.exclude !== "") {
+    dotnetFormatOptions.push("--exclude", options.exclude);
+  }
+
+  if (options.fixWhitespace) {
+    dotnetFormatOptions.push("--fix-whitespace");
+  }
+
+  if (options.fixAnalyzersLevel !== undefined && options.fixAnalyzersLevel !== "") {
+    dotnetFormatOptions.push("--fix-analyzers", options.fixAnalyzersLevel);
+  }
+
+  if (options.fixStyleLevel !== undefined && options.fixStyleLevel !== "") {
+    dotnetFormatOptions.push("--fix-style", options.fixStyleLevel);
+  }
+
+  if (options.logLevel !== undefined && options.logLevel !== "") {
+    dotnetFormatOptions.push("--verbosity", options.logLevel);
+  }
+
+  if (options.verifyNoChanges) {
+    dotnetFormatOptions.push("--verify-no-changes");
   }
 
   const dotnetPath: string = await which("dotnet", true);
   const dotnetResult = await exec(`"${dotnetPath}"`, dotnetFormatOptions, execOptions);
 
-  return !!dotnetResult;
-}
+  // When NOT doing only a dry-run we inspect the actual changed files
+  if (!options.dryRun) {
+    info("Checking changed files");
 
-export function format(version: DotNetFormatVersion): FormatFunction {
-  switch (version || "") {
-    case "3":
-      return formatVersion3;
+    // Check if there are any changed files
+    const stdout: string[] = [];
+    const stderr: string[] = [];
 
-    default:
-      throw Error(`dotnet-format version "${version}" is unsupported`);
+    const gitExecOptions: ExecOptions = {
+      ignoreReturnCode: true,
+      listeners: {
+        stdout: (data: Buffer) => {
+          stdout.push(data.toString());
+        },
+        stderr: (data: Buffer) => {
+          stderr.push(data.toString());
+        },
+      },
+    };
+
+    await exec("git", ["status", "-s"], gitExecOptions);
+
+    if (stderr.join("") !== "") {
+      error("Errors while checking git status for changed files. Error: " + stderr.toString());
+    }
+
+    if (stdout.join("") === "") {
+      info("Did not find any changed files");
+
+      return false;
+    }
+
+    info("Found changed files");
+    return true;
+  }
+  // else, we can just return rely on the exit code of the dotnet format process
+  else {
+    info("dotnet format return code ${dotnetResult}");
+    return !!dotnetResult;
   }
 }
