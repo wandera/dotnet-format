@@ -3,8 +3,8 @@ kind: Component
 metadata:
   name: dotnet-format
   labels:
-    - jira-key: JTWIN
-    - language: TypeScript
+    jira-key: JTWIN
+    language: TypeScript
   annotations:
     backstage.io/source-location: url:https://github.com/wandera/dotnet-format
     jira/project-key: JTWIN
