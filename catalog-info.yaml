@@ -11,5 +11,5 @@ metadata:
 spec:
   type: application
   lifecycle: production
-  owner: Windy Owls Team
-  system: GitHub
+  owner: windy-owls
+  system: jamf-trust
